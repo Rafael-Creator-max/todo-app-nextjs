@@ -2,6 +2,13 @@
 
 import { add, remove, toggleCheck } from '@/queries';
 
+// Define a proper state type instead of using `any`
+interface TodoFormState {
+  success: boolean;
+  error: string | null;
+  id?: string;
+}
+
 const BLACKLISTED_WORDS = ['dirty', 'badword', 'inappropriate'];
 const MAX_TITLE_LENGTH = 100;
 
@@ -29,9 +36,9 @@ function validateTask(title: string): { valid: boolean; message?: string } {
 }
 
 export async function handleAdd(
-  prevState: { success: boolean; error: string | null },
+  prevState: TodoFormState,
   formData: FormData
-): Promise<{ success: boolean; error: string | null; id?: string }> {
+): Promise<TodoFormState> {
   const title = formData.get('title') as string;
   const validation = validateTask(title);
 
@@ -44,7 +51,7 @@ export async function handleAdd(
   }
 
   try {
-    const result = await add(title); // ✅ pass title string only
+    const result = await add(title); // assuming add() returns { id: string }
     return { success: true, error: null, id: result.id };
   } catch (err) {
     console.error('Failed to add todo:', err);

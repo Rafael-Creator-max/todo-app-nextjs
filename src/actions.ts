@@ -2,6 +2,12 @@
 
 import { add, remove, toggleCheck } from './queries';
 
+interface TodoFormState {
+  success: boolean;
+  error: string | null;
+  id?: string;
+}
+
 const BLACKLISTED_WORDS = ['dirty', 'badword', 'inappropriate'];
 const MAX_TITLE_LENGTH = 100;
 
@@ -17,7 +23,7 @@ function validateTask(title: string): { valid: boolean; message?: string } {
     };
   }
 
-  const hasBlacklistedWord = BLACKLISTED_WORDS.some(word =>
+  const hasBlacklistedWord = BLACKLISTED_WORDS.some((word) =>
     title.toLowerCase().includes(word)
   );
 
@@ -29,14 +35,18 @@ function validateTask(title: string): { valid: boolean; message?: string } {
 }
 
 export async function handleAdd(
-  prevState: { success: boolean; error: string | null },
+  prevState: TodoFormState,
   formData: FormData
-): Promise<{ success: boolean; error: string | null; id?: string }> {
+): Promise<TodoFormState> {
   const title = formData.get('title') as string;
   const validation = validateTask(title);
 
   if (!validation.valid) {
-    return { ...prevState, success: false, error: validation.message || 'Validation failed' };
+    return {
+      ...prevState,
+      success: false,
+      error: validation.message || 'Validation failed',
+    };
   }
 
   try {
@@ -48,11 +58,16 @@ export async function handleAdd(
   }
 }
 
-export async function handleToggle(id: string, checked: boolean): Promise<void> {
+export async function handleToggle(
+  id: string,
+  checked: boolean
+): Promise<void> {
   await toggleCheck(id, checked);
 }
 
-export async function handleRemove(id: string): Promise<{ success: boolean; error?: string }> {
+export async function handleRemove(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     await remove(id);
     return { success: true };
