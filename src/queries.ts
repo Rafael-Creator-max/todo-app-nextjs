@@ -1,58 +1,72 @@
-import { query, execute } from "./mysql-connect";
-import { Todo } from "./types";
+// src/queries.ts
+import { supabase } from './supabase-client'
+import { Todo } from './types'
+import { randomUUID } from 'crypto'
 
 export async function getAll(): Promise<Todo[]> {
-  try {
-    const results = await query("SELECT * FROM todos ORDER BY created_at DESC");
-    return Array.isArray(results) ? (results as Todo[]) : [];
-  } catch (error) {
-    console.error("Error fetching todos:", error);
-    throw error;
+  const { data, error } = await supabase
+    .from('todos')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching todos:', error)
+    throw error
   }
+
+  return data as Todo[]
 }
 
 export async function getById(id: string): Promise<Todo | null> {
-  try {
-    const results = await query("SELECT * FROM todos WHERE id = ?", [id]);
-    return Array.isArray(results) && results.length > 0
-      ? (results[0] as Todo)
-      : null;
-  } catch (error) {
-    console.error("Error fetching todo:", error);
-    throw error;
+  const { data, error } = await supabase
+    .from('todos')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null // not found
+    console.error('Error fetching todo:', error)
+    throw error
   }
+
+  return data as Todo
 }
 
 export async function add(title: string): Promise<{ id: string }> {
-  try {
-    // Get a UUID manually
-    const [uuidRow] = await query("SELECT UUID() AS id");
-    const uuid = uuidRow.id;
+  const id = randomUUID()
+  const { error } = await supabase
+    .from('todos')
+    .insert({ id, title })
 
-    // Insert the todo with the generated UUID
-    await execute("INSERT INTO todos (id, title) VALUES (?, ?)", [uuid, title]);
-
-    return { id: uuid };
-  } catch (error) {
-    console.error("Error adding todo:", error);
-    throw error;
+  if (error) {
+    console.error('Error adding todo:', error)
+    throw error
   }
+
+  return { id }
 }
 
 export async function remove(id: string): Promise<void> {
-  try {
-    await execute("DELETE FROM todos WHERE id = ?", [id]);
-  } catch (error) {
-    console.error("Error removing todo:", error);
-    throw error;
+  const { error } = await supabase
+    .from('todos')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error removing todo:', error)
+    throw error
   }
 }
 
 export async function toggleCheck(id: string, checked: boolean): Promise<void> {
-  try {
-    await execute("UPDATE todos SET checked = ? WHERE id = ?", [checked, id]);
-  } catch (error) {
-    console.error("Error toggling todo:", error);
-    throw error;
+  const { error } = await supabase
+    .from('todos')
+    .update({ checked })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error toggling todo:', error)
+    throw error
   }
 }

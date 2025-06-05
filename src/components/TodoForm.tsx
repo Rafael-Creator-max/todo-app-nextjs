@@ -44,12 +44,14 @@ export function TodoForm({ onAdd }: TodoFormProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPending, setIsPending] = useState(false);
   const [formKey, setFormKey] = useState(0); // key to reset form
+  const [hasSubmitted, setHasSubmitted] = useState(false); // track submission
 
   const [state, formAction] = useActionState<TodoFormState, FormData>(
     async (prevState, formData) => {
       setIsPending(true);
       try {
         const result = await handleAdd(prevState, formData);
+        setHasSubmitted(true); // mark submission
         return result;
       } finally {
         setIsPending(false);
@@ -59,12 +61,13 @@ export function TodoForm({ onAdd }: TodoFormProps) {
   );
 
   useEffect(() => {
-    if (state.success && onAdd) {
-      onAdd();                          // refresh todos
-      inputRef.current!.value = '';     // clear input field
-      setFormKey(prev => prev + 1);     // reset form state
+    if (state.success && hasSubmitted) {
+      onAdd?.();                           // trigger parent update
+      inputRef.current!.value = '';        // clear field
+      setFormKey((prev) => prev + 1);      // reset form
+      setHasSubmitted(false);              // reset submission flag
     }
-  }, [state.success, onAdd]);
+  }, [state.success, hasSubmitted, onAdd]);
 
   return (
     <div className="w-full max-w-2xl mx-auto mb-8">
