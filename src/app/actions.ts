@@ -1,25 +1,24 @@
 'use server';
 
-import { addTodo, removeTodo, toggleTodo } from '@/lib/queries';
-import { TodoInput } from '@/lib/types';
+import { add, remove, toggleCheck } from '@/queries';
 
 const BLACKLISTED_WORDS = ['dirty', 'badword', 'inappropriate'];
-const MAX_TASK_LENGTH = 100;
+const MAX_TITLE_LENGTH = 100;
 
-function validateTask(task: string): { valid: boolean; message?: string } {
-  if (!task.trim()) {
+function validateTask(title: string): { valid: boolean; message?: string } {
+  if (!title.trim()) {
     return { valid: false, message: 'Field cannot be empty' };
   }
 
-  if (task.length > MAX_TASK_LENGTH) {
-    return { 
-      valid: false, 
-      message: `Please use a maximum of ${MAX_TASK_LENGTH} characters. You used ${task.length}` 
+  if (title.length > MAX_TITLE_LENGTH) {
+    return {
+      valid: false,
+      message: `Please use a maximum of ${MAX_TITLE_LENGTH} characters. You used ${title.length}`,
     };
   }
 
-  const hasBlacklistedWord = BLACKLISTED_WORDS.some(word => 
-    task.toLowerCase().includes(word)
+  const hasBlacklistedWord = BLACKLISTED_WORDS.some((word) =>
+    title.toLowerCase().includes(word)
   );
 
   if (hasBlacklistedWord) {
@@ -29,26 +28,45 @@ function validateTask(task: string): { valid: boolean; message?: string } {
   return { valid: true };
 }
 
-export async function handleAdd(prevState: any, formData: FormData) {
-  const task = formData.get('task') as string;
-  const validation = validateTask(task);
-  
+export async function handleAdd(
+  prevState: { success: boolean; error: string | null },
+  formData: FormData
+): Promise<{ success: boolean; error: string | null; id?: string }> {
+  const title = formData.get('title') as string;
+  const validation = validateTask(title);
+
   if (!validation.valid) {
-    return { success: false, error: validation.message };
+    return {
+      ...prevState,
+      success: false,
+      error: validation.message || 'Validation failed',
+    };
   }
 
   try {
-    await addTodo({ task, checked: false });
-    return { success: true, error: null };
-  } catch (error) {
-    return { success: false, error: 'Failed to add todo' };
+    const result = await add(title); // ✅ pass title string only
+    return { success: true, error: null, id: result.id };
+  } catch (err) {
+    console.error('Failed to add todo:', err);
+    return { ...prevState, success: false, error: 'Failed to add todo' };
   }
 }
 
-export async function handleToggle(id: string, checked: boolean) {
-  await toggleTodo(id, checked);
+export async function handleToggle(
+  id: string,
+  checked: boolean
+): Promise<void> {
+  await toggleCheck(id, checked);
 }
 
-export async function handleRemove(id: string) {
-  await removeTodo(id);
+export async function handleRemove(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await remove(id);
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to remove todo:', err);
+    return { success: false, error: 'Failed to remove todo' };
+  }
 }
