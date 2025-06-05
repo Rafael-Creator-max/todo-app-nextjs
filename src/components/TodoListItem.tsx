@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TodoRemoveButton } from '@/components/TodoRemoveButton';
@@ -48,11 +49,16 @@ export function TodoListItem({
       {/* Right: image (optional) + remove button */}
       <div className="flex items-center gap-4">
         {image && (
-          <img
-            src={`${image}${image.includes('?') ? '&' : '?'}w=50&h=50&fit=cover`}
-            alt="Todo"
-            className="w-12 h-12 object-cover rounded"
-          />
+          <div className="relative w-12 h-12">
+            <Image
+              src={`${image}${image.includes('?') ? '&' : '?'}w=50&h=50&fit=cover`}
+              alt="Todo"
+              fill
+              sizes="(max-width: 768px) 50px, 50px"
+              className="object-cover rounded"
+              priority={false}
+            />
+          </div>
         )}
 
         <form action={() => onRemove(id, !!image)}>

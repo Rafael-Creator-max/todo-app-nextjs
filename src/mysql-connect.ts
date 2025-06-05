@@ -1,9 +1,7 @@
 import mysql from 'mysql2';
+import type { Pool, PoolConnection, RowDataPacket, ResultSetHeader } from 'mysql2';
 
-type QueryResult = any;
-type QueryCallback = (error: mysql.QueryError | null, results?: any) => void;
-
-const pool = mysql.createPool({
+const pool: Pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'root',
@@ -42,31 +40,31 @@ process.on('SIGINT', () => {
   });
 });
 
-export function query(sql: string, values: any[] = []): Promise<QueryResult> {
+export function query<T = RowDataPacket[]>(sql: string, values: unknown[] = []): Promise<T> {
   return new Promise((resolve, reject) => {
     pool.query(sql, values, (error, results) => {
       if (error) {
         console.error('Query error:', error);
         return reject(error);
       }
-      resolve(results);
+      resolve(results as T);
     });
   });
 }
 
-export function execute(sql: string, values: any[] = []): Promise<QueryResult> {
+export function execute<T = ResultSetHeader>(sql: string, values: unknown[] = []): Promise<T> {
   return new Promise((resolve, reject) => {
     pool.execute(sql, values, (error, results) => {
       if (error) {
         console.error('Execute error:', error);
         return reject(error);
       }
-      resolve(results);
+      resolve(results as T);
     });
   });
 }
 
-export function getConnection(): Promise<mysql.PoolConnection> {
+export function getConnection(): Promise<PoolConnection> {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {
       if (err) {
