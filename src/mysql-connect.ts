@@ -74,7 +74,7 @@
 //     });
 //   });
 // }
-import mysql, { Pool, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import mysql, { Pool, RowDataPacket, ResultSetHeader , } from 'mysql2/promise';
 
 const pool: Pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -115,13 +115,20 @@ process.on('SIGINT', () => {
 });
 
 // Query function
-export async function query<T = RowDataPacket[]>(sql: string, values: unknown[] = []): Promise<T> {
+export async function query<T extends RowDataPacket[] = RowDataPacket[]>(
+  sql: string,
+  values: unknown[] = []
+): Promise<T> {
   const [rows] = await pool.query(sql, values);
   return rows as T;
 }
 
 // Execute function
-export async function execute<T = ResultSetHeader>(sql: string, values: unknown[] = []): Promise<T> {
+export async function execute<T extends ResultSetHeader = ResultSetHeader>(
+  sql: string,
+  values: unknown[] = []
+): Promise<T> {
   const [result] = await pool.execute(sql, values);
   return result as T;
 }
+
