@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { remove, getById } from '@/queries';
 
 export async function DELETE(
-  request: Request,
-  contextPromise: Promise<{ params: { id: string } }>
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await contextPromise;
+    const params = await context.params;
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
 
-    const id = context.params.id; // ✅ Now this is safe
+    const id = params.id;
 
     const todo = await getById(id);
     if (!todo) {

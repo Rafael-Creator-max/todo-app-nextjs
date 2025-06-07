@@ -46,24 +46,10 @@ export function TodoListItem({
         </label>
       </div>
 
-      {/* Right: image (optional) + remove button */}
-      {/* <div className="flex items-center gap-4">
-        {image && (
-          <div className="relative w-12 h-12">
-            <Image
-              src={`${image}${image.includes('?') ? '&' : '?'}w=50&h=50&fit=cover`}
-              alt="Todo"
-              fill
-              sizes="(max-width: 768px) 50px, 50px"
-              className="object-cover rounded"
-              priority={false}
-            />
-          </div>
-        )} */}
-
-        <form action={() => onRemove(id, !!image)}>
-          <TodoRemoveButton onRemove={() => onRemove(id, !!image)} />
-        </form>
+      {/* Right: remove button */}
+      <form action={() => onRemove(id, !!image)}>
+        <TodoRemoveButton onRemove={() => onRemove(id, !!image)} />
+      </form>
     </Card>
   );
 }
